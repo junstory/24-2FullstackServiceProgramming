@@ -119,6 +119,40 @@ export const userGetInfoDAO = async (userId) => {
     
 }
 
+// 사용자 정보 업데이트 함수
+export const updateUserDAO = async (userId, updatedUser) => {
+    try {
+        const result = await new Promise((resolve, reject) => {
+            db.run(
+                `UPDATE users 
+                SET email = ?, 
+                    name = ?, 
+                    gender = ?, 
+                    phone_num = ?, 
+                    birthday = ?, 
+                    updated_at = CURRENT_TIMESTAMP 
+                WHERE id = ?`,
+                [updatedUser.email, updatedUser.name, updatedUser.gender, updatedUser.phoneNumber, updatedUser.birthday, userId],
+                function (err) {
+                    if (err) {
+                        console.error('updateUserDAO error:', err);
+                        reject("회원 정보 수정 실패");
+                    } else if (this.changes === 0) {
+                        reject("해당 ID의 사용자를 찾을 수 없습니다");
+                    } else {
+                        resolve({ message: 'User updated successfully', changes: this.changes });
+                    }
+                }
+            );
+        });
+
+        return result;
+    } catch (error) {
+        console.error('Error in updateUserDAO:', error);
+        throw error;
+    }
+};
+
 // 사용자 삭제 함수
 export const deleteUserDAO = async (userId) => {
     try {
