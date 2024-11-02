@@ -1,6 +1,16 @@
 import { response } from '../../config/response.js'
 import { status } from '../../config/response.status.js'
-import { userGetInfoDAO } from '../models/user.dao.js'
+import { userGetInfoDAO, createUserDAO, deleteUserDAO } from '../models/user.dao.js'
+
+export const userCreateController = async (req, res) => {
+  try {
+    console.log('Create user : ', req.body)
+    return res.send(response(status.SUCCESS, await createUserDAO(req.body)))
+  } catch (err) {
+    console.log('CREATE USER CTRL ERR: ', err)
+    res.send(response(status.BAD_REQUEST, err))
+  }
+}
 
 export const userGetInfoController = async (req, res) => {
   try {
@@ -10,7 +20,7 @@ export const userGetInfoController = async (req, res) => {
     )
   } catch (err) {
     console.log('GET USER CTRL ERR: ', err)
-    res.send(response(status.BAD_REQUEST, err.data.message))
+    res.send(response(status.BAD_REQUEST, err))
   }
 }
 
@@ -30,5 +40,15 @@ export const userEditProfileController = async (req, res) => {
   } catch (err) {
     console.log('GET USER CTRL ERR: ', err)
     res.send(response(status.BAD_REQUEST, err.data.message))
+  }
+}
+
+export const userDeleteController = async (req, res) => {
+  try {
+    console.log('Delete user Info : ', req.params.userId)
+    return res.send(response(status.SUCCESS, await deleteUserDAO(req.params.userId)))
+  } catch (err) {
+    console.log('DELETE USER CTRL ERR: ', err)
+    res.send(response(status.BAD_REQUEST, err))
   }
 }
