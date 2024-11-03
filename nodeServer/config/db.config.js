@@ -1,20 +1,35 @@
 'use strict';
 import sqlite3 from 'sqlite3';
 sqlite3.verbose();
-const db = new sqlite3.Database('./data.db');
 
-db.serialize(()=> {
-    db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT, isActive INTEGER)");
-
-    const stmt = db.prepare("INSERT INTO users (name, isActive) VALUES (?, ?)");
-    stmt.run("Kim",1);
-    stmt.run("Park", 0);
-    stmt.finalize(); //stmt더이상 사용 불가. 자원 정리
-
-    db.each("SELECT id, name, isActive FROM users WHERE isActive = 1", (err, row) =>{
-        if (err) return console.err(err);
-        console.log(`${row.id} : ${row.name} (isActive: ${row.isActive})`)
-    })
+export const db = new sqlite3.Database('./data.db', (err) => {
+    if (err) {
+        console.error('Error opening database:', err);
+    } else {
+        console.log('Connected to the SQLite database.');
+    }
 });
 
-db.close();
+export const executeTransaction = async (queries) => {
+    console.log('executeTransaction : ', queries);
+    return new Promise((resolve, reject) => {
+        db.serialize(() => {
+            db.run("BEGIN TRANSACTION");
+            try {
+                for (const query of queries) {
+                    db.run(query);
+                }
+                db.run("COMMIT");
+                resolve();
+            } catch (error) {
+                db.run("ROLLBACK");
+                reject(error);
+            }
+        });
+    });
+};
+
+
+//db.close();
+
+export default db;
