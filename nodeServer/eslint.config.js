@@ -3,7 +3,7 @@ export default {
   //plugins: ['prettier'],
 
   // eslint의 룰을 기본 권장설정으로 설정
-  extends: ['eslint:recommended', 'plugin:prettier/recommended',"prettier"],
+  extends: ['eslint:recommended', 'plugin:prettier/recommended', 'prettier'],
 
   // 코드를 해석하는 parser에 대한 설정
   parserOptions: {
