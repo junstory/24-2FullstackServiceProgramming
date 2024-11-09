@@ -1,7 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import userRouter from './routes/user.route.js';
-import commuteRouter from './routes/commute.route.js';
+import companyRouter from './routes/company.route.js';
 import planRouter from './routes/plan.route.js';
 import adminRouter from './routes/admin.route.js';
 
@@ -17,7 +17,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/v1/user', userRouter);
-app.use('/api/v1/commute', commuteRouter);
+app.use('/api/v1/company', companyRouter);
 app.use('/api/v1/plan', planRouter);
 app.use('/api/v1/admin', adminRouter);
 
