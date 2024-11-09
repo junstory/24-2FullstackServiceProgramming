@@ -4,7 +4,6 @@ import userRouter from './routes/user.route.js';
 import commuteRouter from './routes/commute.route.js';
 import planRouter from './routes/plan.route.js';
 import adminRouter from './routes/admin.route.js';
-import planRouter from './routes/plan.route.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -12,6 +11,7 @@ app.use(express.json());
 //app.use(cors());
 
 app.use((req, res, next) => {
+  console.log('====================================');
   console.log(`${req.method} ${req.url}`);
   next();
 });
@@ -24,7 +24,7 @@ app.use('/api/v1/plan', planRouter);
 app.use((req, res, next) => {
   res.status(404).json({
     success: false,
-    message: 'Not Found',
+    message: 'Not found',
   });
 });
 

@@ -1,24 +1,25 @@
 import sqlite3 from 'sqlite3';
 import { db, executeTransaction } from '../../config/db.config.js';
 import { planResponseDTO } from '../dtos/plan.dto.js';
-
+import { BaseError } from '../../config/error.js';
+import { status } from '../../config/response.status.js';
 //Create
 export const createPlanDAO = async (plan) => {
   try {
-    // 사용자 중복 확인
+    // 사용자 존재 확인
     const existingUser = await new Promise((resolve, reject) => {
       db.get(`SELECT id FROM users WHERE id = ?`, [plan.userId], (err, row) => {
         if (err) {
           console.error('Error checking existing user:', err);
           reject('회원 확인 실패');
         } else {
-          resolve(row); // row가 있으면 중복된 사용자
+          resolve(row); // row가 있으면 존재하는 사용자
         }
       });
     });
 
     if (!existingUser) {
-      throw new Error('존재하지 않는 회원입니다.'); // 중복된 사용자 예외 발생
+      throw new BaseError(status.USER_NOT_EXISTS); // 존재하지 않는 사용자.
     }
 
     const newPlanId = await new Promise((resolve, reject) => {
@@ -104,8 +105,28 @@ export const getPlanInfoDAO = async (companyId) => {
 };
 
 // 일정 정보 업데이트 함수
-export const updatePlanDAO = async (updatedPlan) => {
+export const updatePlanDAO = async (planId, updatedPlan) => {
   try {
+    //사용자 확인
+    const existingUser = await new Promise((resolve, reject) => {
+      db.get(`SELECT user_id FROM plans WHERE id = ?`, [planId], (err, row) => {
+        if (err) {
+          console.error('Error checking existing user:', err);
+          reject('회원 확인 실패');
+        } else {
+          resolve(row); // row가 있으면 일정이 존재.
+        }
+      });
+    });
+
+    if (!existingUser) {
+      throw '일정을 조회할 수 없습니다.'; // 일정이 조회되지 않는 경우
+    }
+
+    if (existingUser.user_id !== updatedPlan.userId) {
+      throw '사용자가 일치하지 않습니다.'; //new BaseError(status.USER_NOT_MATCHED); // 일정의 사용자와 업데이트 요청한 사용자가 일치하지 않는 경우
+    }
+
     const result = await new Promise((resolve, reject) => {
       db.run(
         `UPDATE plans 
@@ -118,7 +139,7 @@ export const updatePlanDAO = async (updatedPlan) => {
           updatedPlan.description,
           updatedPlan.startDate,
           updatedPlan.endDate,
-          updatedPlan.planId,
+          planId,
         ],
         function (err) {
           if (err) {
@@ -143,83 +164,32 @@ export const updatePlanDAO = async (updatedPlan) => {
   }
 };
 
-// // 사용자 삭제 함수
-// export const deleteUserDAO = async (userId) => {
-//   try {
-//     // 사용자 삭제 전에 외래 키가 걸린 테이블에서 데이터를 먼저 삭제해야 할 수도 있음
-//     await new Promise((resolve, reject) => {
-//       db.run(
-//         `DELETE FROM user_company WHERE user_id = ?`,
-//         [userId],
-//         function (err) {
-//           if (err) {
-//             console.error('Error deleting from user_company:', err);
-//             reject('user_company 테이블에서 관계 삭제 실패');
-//           } else {
-//             resolve();
-//           }
-//         },
-//       );
-//     });
+// 일정 정보 삭제 함수
+export const deletePlanDAO = async (planId, req) => {
+  try {
+    const result = await new Promise((resolve, reject) => {
+      db.run(
+        `DELETE FROM plans WHERE id = ? and user_id = ?`,
+        [planId, req.userId],
+        function (err) {
+          if (err) {
+            console.error('deletePlanDAO error:', err);
+            reject('일정 삭제 실패');
+          } else if (this.changes === 0) {
+            reject('해당 ID의 일정이 없거나 잘못된 사용자입니다.');
+          } else {
+            resolve({
+              message: 'Plan deleted successfully',
+              changes: this.changes,
+            });
+          }
+        },
+      );
+    });
 
-//     await new Promise((resolve, reject) => {
-//       db.run(
-//         `DELETE FROM user_role WHERE user_id = ?`,
-//         [userId],
-//         function (err) {
-//           if (err) {
-//             console.error('Error deleting from user_role:', err);
-//             reject('user_role 테이블에서 관계 삭제 실패');
-//           } else {
-//             resolve();
-//           }
-//         },
-//       );
-//     });
-
-//     // 사용자 삭제
-//     const result = await new Promise((resolve, reject) => {
-//       db.run(`DELETE FROM users WHERE id = ?`, [userId], function (err) {
-//         if (err) {
-//           console.error('Error deleting user:', err);
-//           reject('회원 삭제 실패');
-//         } else if (this.changes === 0) {
-//           reject('해당 ID의 사용자를 찾을 수 없습니다');
-//         } else {
-//           resolve({
-//             message: 'User deleted successfully',
-//             changes: this.changes,
-//           });
-//         }
-//       });
-//     });
-
-//     return result;
-//   } catch (error) {
-//     console.error('Error in deleteUserDAO:', error);
-//     throw error;
-//   }
-// };
-
-// //사용자와 회사 관계 등록
-// export const linkUserToCompanyDAO = async (userId, companyId) => {
-//   try {
-//     await new Promise((resolve, reject) => {
-//       db.run(
-//         `INSERT INTO user_company (user_id, company_id) VALUES (?, ?)`,
-//         [userId, companyId],
-//         (err) => {
-//           if (err) {
-//             console.error('linkUserToCompanyDAO error:', err);
-//             reject('사용자와 회사 관계 등록 실패');
-//           } else {
-//             resolve();
-//           }
-//         },
-//       );
-//     });
-//   } catch (error) {
-//     console.error('Error in linkUserToCompanyDAO:', error);
-//     throw error;
-//   }
-// };
+    return result;
+  } catch (error) {
+    console.error('Error in deletePlanDAO:', error);
+    throw error;
+  }
+};
