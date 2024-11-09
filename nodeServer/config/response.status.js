@@ -29,6 +29,19 @@ export const status = {
     code: 'USER4001',
     message: '이미 존재하는 닉네임입니다.',
   },
+  //PLAN
+  USER_NOT_MATCHED: {
+    status: 404,
+    isSuccess: false,
+    code: 'PLAN4000',
+    message: '유저가 일치하지 않습니다..',
+  },
+  PLAN_NOT_EXISTS: {
+    status: 404,
+    isSuccess: false,
+    code: 'PLAN4001',
+    message: '일정을 찾을 수 없습니다..',
+  },
   //TOKEN
   TOKEN_ERROR: {
     status: 400,
@@ -99,4 +112,4 @@ export const status = {
     code: 'AUTH4001',
     message: '비정상적 데이터입니다!',
   },
-}
+};
