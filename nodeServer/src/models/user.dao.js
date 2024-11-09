@@ -322,6 +322,57 @@ export const userWorkEndDAO = async (req) => {
 //사용자와 회사 관계 등록
 export const linkUserToCompanyDAO = async (userId, companyId) => {
   try {
+    // 회사 존재 여부 확인
+    const companyExists = await new Promise((resolve, reject) => {
+      db.get(`SELECT id FROM company WHERE id = ?`, [companyId], (err, row) => {
+        if (err) {
+          console.error('Error checking company existence:', err);
+          reject('회사 존재 확인 실패');
+        } else {
+          resolve(row); // row가 있으면 회사 존재
+        }
+      });
+    });
+
+    if (!companyExists) {
+      throw '존재하지 않는 회사입니다.'; // 회사 존재하지 않음 예외 발생
+    }
+    const existingLink = await new Promise((resolve, reject) => {
+      db.get(
+        `SELECT is_activated FROM user_company WHERE user_id = ? AND company_id = ?`,
+        [userId, companyId],
+        (err, row) => {
+          if (err) {
+            console.error('Error checking existing link:', err);
+            reject('기존 관계 확인 실패');
+          } else {
+            resolve(row); // row가 있으면 기존 관계 존재
+          }
+        },
+      );
+    });
+
+    if (existingLink) {
+      if (existingLink.is_activated === 1) {
+        throw '이미 활성화된 사용자와 회사 관계가 있습니다.'; // 활성화된 관계 예외 발생
+      } else {
+        await new Promise((resolve, reject) => {
+          db.run(
+            `DELETE FROM user_company WHERE user_id = ? AND company_id = ?`,
+            [userId, companyId],
+            (err) => {
+              if (err) {
+                console.error('Error deleting existing link:', err);
+                reject('기존 관계 삭제 실패');
+              } else {
+                resolve();
+              }
+            },
+          );
+        });
+      }
+    }
+
     await new Promise((resolve, reject) => {
       db.run(
         `INSERT INTO user_company (user_id, company_id) VALUES (?, ?)`,

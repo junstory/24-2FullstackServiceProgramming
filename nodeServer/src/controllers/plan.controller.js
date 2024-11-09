@@ -13,7 +13,7 @@ export const planCreateController = async (req, res) => {
     return res.send(response(status.SUCCESS, await createPlanDAO(req.body)));
   } catch (err) {
     console.log('CREATE PLAN CTRL ERR: ', err);
-    res.send(response(status.BAD_REQUEST, err));
+    res.status(400).send(response(status.BAD_REQUEST, err));
   }
 };
 
@@ -25,7 +25,7 @@ export const planGetInfoController = async (req, res) => {
     );
   } catch (err) {
     console.log('GET PLAN CTRL ERR: ', err);
-    res.send(response(status.BAD_REQUEST, err));
+    res.status(400).send(response(status.BAD_REQUEST, err));
   }
 };
 

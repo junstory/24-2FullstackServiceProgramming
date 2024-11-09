@@ -7,6 +7,7 @@ import {
   updateUserDAO,
   userWorkStartDAO,
   userWorkEndDAO,
+  linkUserToCompanyDAO,
 } from '../models/user.dao.js';
 
 export const userCreateController = async (req, res) => {
@@ -15,7 +16,22 @@ export const userCreateController = async (req, res) => {
     return res.send(response(status.SUCCESS, await createUserDAO(req.body)));
   } catch (err) {
     console.log('CREATE USER CTRL ERR: ', err);
-    res.send(response(status.BAD_REQUEST, err));
+    res.status(400).send(response(status.BAD_REQUEST, err));
+  }
+};
+
+export const userLinkCompanyController = async (req, res) => {
+  try {
+    console.log('Link user to company : ', req.body);
+    return res.send(
+      response(
+        status.SUCCESS,
+        await linkUserToCompanyDAO(req.body.userId, req.body.companyId),
+      ),
+    );
+  } catch (err) {
+    console.log('LINK USER CTRL ERR: ', err);
+    res.status(400).send(response(status.BAD_REQUEST, err));
   }
 };
 
@@ -27,7 +43,7 @@ export const userGetInfoController = async (req, res) => {
     );
   } catch (err) {
     console.log('GET USER CTRL ERR: ', err);
-    res.send(response(status.BAD_REQUEST, err));
+    res.status(400).send(response(status.BAD_REQUEST, err));
   }
 };
 
@@ -61,7 +77,7 @@ export const userUpdateController = async (req, res) => {
     );
   } catch (err) {
     console.log('UPDATE USER CTRL ERR: ', err);
-    res.send(response(status.BAD_REQUEST, err));
+    res.status(400).send(response(status.BAD_REQUEST, err));
   }
 };
 
@@ -73,7 +89,7 @@ export const userDeleteController = async (req, res) => {
     );
   } catch (err) {
     console.log('DELETE USER CTRL ERR: ', err);
-    res.send(response(status.BAD_REQUEST, err));
+    res.status(400).send(response(status.BAD_REQUEST, err));
   }
 };
 
@@ -83,7 +99,7 @@ export const userWorkStartController = async (req, res) => {
     return res.send(response(status.SUCCESS, await userWorkStartDAO(req.body)));
   } catch (err) {
     console.log('WORK START CTRL ERR: ', err);
-    res.send(response(status.BAD_REQUEST, err));
+    res.status(400).send(response(status.BAD_REQUEST, err));
   }
 };
 
@@ -93,6 +109,6 @@ export const userWorkEndController = async (req, res) => {
     return res.send(response(status.SUCCESS, await userWorkEndDAO(req.body)));
   } catch (err) {
     console.log('WORK END CTRL ERR: ', err);
-    res.send(response(status.BAD_REQUEST, err));
+    res.sstatus(400).end(response(status.BAD_REQUEST, err));
   }
 };
