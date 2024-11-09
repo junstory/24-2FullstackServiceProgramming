@@ -19,7 +19,7 @@ app.use((req, res, next) => {
 app.use('/api/v1/user', userRouter);
 app.use('/api/v1/commute', commuteRouter);
 app.use('/api/v1/plan', planRouter);
-//app.use('/api/v1/admin', adminRouter);
+app.use('/api/v1/admin', adminRouter);
 
 app.use((req, res, next) => {
   res.status(404).json({
