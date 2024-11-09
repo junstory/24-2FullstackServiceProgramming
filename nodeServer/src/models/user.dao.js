@@ -79,11 +79,14 @@ export const userGetInfoDAO = async (userId) => {
         `SELECT
                     u.*,
                     c.id AS company_id,
+                    uc.is_activated AS company_is_active,
                     c.name AS company_name,
                     r.id AS role_id,
                     r.name AS role_name,
                     co.id AS commute_id,
+                    co.plan_in,
                     co.go_to_work,
+                    co.plan_out,
                     co.get_off_work
                 FROM
                     users u
@@ -220,6 +223,98 @@ export const deleteUserDAO = async (userId) => {
     return result;
   } catch (error) {
     console.error('Error in deleteUserDAO:', error);
+    throw error;
+  }
+};
+
+//사용자 출근
+export const userWorkStartDAO = async (req) => {
+  try {
+    // 사용자 존재 여부 확인
+    const userExists = await new Promise((resolve, reject) => {
+      db.get(`SELECT id FROM users WHERE id = ?`, [req.userId], (err, row) => {
+        if (err) {
+          console.error('Error checking user existence:', err);
+          reject('사용자 존재 확인 실패');
+        } else {
+          resolve(row); // row가 있으면 사용자 존재
+        }
+      });
+    });
+
+    if (!userExists) {
+      throw '존재하지 않는 사용자입니다.'; // 사용자 존재하지 않음 예외 발생
+    }
+    // 오늘 날짜에 이미 출근 기록이 있는지 확인
+    const existingCommute = await new Promise((resolve, reject) => {
+      db.get(
+        `SELECT id FROM commutes WHERE user_id = ? AND DATE(go_to_work) = DATE('now')`,
+        [req.userId],
+        (err, row) => {
+          if (err) {
+            console.error('Error checking existing commute:', err);
+            reject('출근 기록 확인 실패');
+          } else {
+            resolve(row); // row가 있으면 이미 출근 기록이 있음
+          }
+        },
+      );
+    });
+
+    if (existingCommute) {
+      throw '이미 오늘 출근 기록이 있습니다.'; // 중복된 출근 기록 예외 발생
+    }
+    const result = await new Promise((resolve, reject) => {
+      db.run(
+        `INSERT INTO commutes (user_id, go_to_work) VALUES (?, CURRENT_TIMESTAMP)`,
+        [req.userId],
+        function (err) {
+          if (err) {
+            console.error('userWorkStartDAO error:', err);
+            reject('출근 등록 실패');
+          } else {
+            resolve({
+              message: '출근 등록 성공',
+              commuteId: this.lastID,
+            });
+          }
+        },
+      );
+    });
+
+    return result;
+  } catch (error) {
+    console.error('Error in userWorkStartDAO:', error);
+    throw error;
+  }
+};
+
+//사용자 퇴근
+export const userWorkEndDAO = async (req) => {
+  try {
+    const result = await new Promise((resolve, reject) => {
+      db.run(
+        `UPDATE commutes SET get_off_work = CURRENT_TIMESTAMP WHERE user_id = ? AND get_off_work IS NULL`,
+        [req.userId],
+        function (err) {
+          if (err) {
+            console.error('userWorkEndDAO error:', err);
+            reject('퇴근 등록 실패');
+          } else if (this.changes === 0) {
+            reject('출근 기록이 없거나 이미 퇴근 처리된 사용자입니다.');
+          } else {
+            resolve({
+              message: '퇴근 등록 성공',
+              changes: this.changes,
+            });
+          }
+        },
+      );
+    });
+
+    return result;
+  } catch (error) {
+    console.error('Error in userWorkEndDAO:', error);
     throw error;
   }
 };
