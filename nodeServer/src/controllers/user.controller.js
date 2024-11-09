@@ -5,6 +5,8 @@ import {
   createUserDAO,
   deleteUserDAO,
   updateUserDAO,
+  userWorkStartDAO,
+  userWorkEndDAO,
 } from '../models/user.dao.js';
 
 export const userCreateController = async (req, res) => {
@@ -29,16 +31,24 @@ export const userGetInfoController = async (req, res) => {
   }
 };
 
-export const userEditProfileController = async (req, res) => {
-  try {
-    console.log('Edit user Info : ', req.params.userId);
-    const result = await userEditProfileService(req);
-    return res.send(response(status.SUCCESS, result));
-  } catch (err) {
-    console.log('GET USER CTRL ERR: ', err);
-    res.send(response(status.BAD_REQUEST, err.data.message));
-  }
-};
+// export const userEditProfileController = async (req, res) => {
+//   try {
+//     console.log('Edit user Info : ', req.params.userId);
+//     const result = await userEditProfileService(req);
+//     if (result == -2) {
+//       return res.send(
+//         response(
+//           status.NAME_ALREADY_EXISTS,
+//           await userGetInfoProvide(req.params.userId),
+//         ),
+//       );
+//     }
+//     return res.send(response(status.SUCCESS, result));
+//   } catch (err) {
+//     console.log('GET USER CTRL ERR: ', err);
+//     res.send(response(status.BAD_REQUEST, err.data.message));
+//   }
+// };
 
 export const userUpdateController = async (req, res) => {
   try {
@@ -63,6 +73,26 @@ export const userDeleteController = async (req, res) => {
     );
   } catch (err) {
     console.log('DELETE USER CTRL ERR: ', err);
+    res.send(response(status.BAD_REQUEST, err));
+  }
+};
+
+export const userWorkStartController = async (req, res) => {
+  try {
+    console.log('Start work user: ', req.body.userId);
+    return res.send(response(status.SUCCESS, await userWorkStartDAO(req.body)));
+  } catch (err) {
+    console.log('WORK START CTRL ERR: ', err);
+    res.send(response(status.BAD_REQUEST, err));
+  }
+};
+
+export const userWorkEndController = async (req, res) => {
+  try {
+    console.log('End work user: ', req.body.userId);
+    return res.send(response(status.SUCCESS, await userWorkEndDAO(req.body)));
+  } catch (err) {
+    console.log('WORK END CTRL ERR: ', err);
     res.send(response(status.BAD_REQUEST, err));
   }
 };
