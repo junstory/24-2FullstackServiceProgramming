@@ -17,4 +17,5 @@ userRouter.delete('/:userId', userDeleteController);
 userRouter.put('/:userId', userUpdateController);
 userRouter.post('/commute/in', userWorkStartController);
 userRouter.post('/commute/out', userWorkEndController);
+
 export default userRouter;

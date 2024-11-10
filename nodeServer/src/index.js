@@ -4,6 +4,7 @@ import userRouter from './routes/user.route.js';
 import companyRouter from './routes/company.route.js';
 import planRouter from './routes/plan.route.js';
 import adminRouter from './routes/admin.route.js';
+import oauthRouter from './controllers/oauth.controller.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -20,6 +21,7 @@ app.use('/api/v1/user', userRouter);
 app.use('/api/v1/company', companyRouter);
 app.use('/api/v1/plan', planRouter);
 app.use('/api/v1/admin', adminRouter);
+app.use('/oauth', oauthRouter);
 
 app.use((req, res, next) => {
   res.status(404).json({

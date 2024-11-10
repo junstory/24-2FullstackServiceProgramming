@@ -305,7 +305,7 @@ export const userWorkEndDAO = async (req) => {
           } else {
             resolve({
               message: '퇴근 등록 성공',
-              changes: this.changes,
+              commuteId: this.lastID,
             });
           }
         },
@@ -337,10 +337,12 @@ export const linkUserToCompanyDAO = async (userId, companyId) => {
     if (!companyExists) {
       throw '존재하지 않는 회사입니다.'; // 회사 존재하지 않음 예외 발생
     }
+
+    //이미 등록된 회사가 있는지 확인
     const existingLink = await new Promise((resolve, reject) => {
       db.get(
-        `SELECT is_activated FROM user_company WHERE user_id = ? AND company_id = ?`,
-        [userId, companyId],
+        `SELECT is_activated FROM user_company WHERE user_id = ?`,
+        [userId],
         (err, row) => {
           if (err) {
             console.error('Error checking existing link:', err);
@@ -358,8 +360,8 @@ export const linkUserToCompanyDAO = async (userId, companyId) => {
       } else {
         await new Promise((resolve, reject) => {
           db.run(
-            `DELETE FROM user_company WHERE user_id = ? AND company_id = ?`,
-            [userId, companyId],
+            `DELETE FROM user_company WHERE user_id = ?`,
+            [userId],
             (err) => {
               if (err) {
                 console.error('Error deleting existing link:', err);
