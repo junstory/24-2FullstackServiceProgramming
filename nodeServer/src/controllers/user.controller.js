@@ -109,6 +109,6 @@ export const userWorkEndController = async (req, res) => {
     return res.send(response(status.SUCCESS, await userWorkEndDAO(req.body)));
   } catch (err) {
     console.log('WORK END CTRL ERR: ', err);
-    res.sstatus(400).end(response(status.BAD_REQUEST, err));
+    res.status(400).send(response(status.BAD_REQUEST, err));
   }
 };
