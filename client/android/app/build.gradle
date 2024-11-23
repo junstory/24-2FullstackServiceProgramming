@@ -5,6 +5,19 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+// .env 파일 읽기 위한 플러그인 추가
+def dotenvFile = rootProject.file(".env")
+def envVars = [:]
+//println "Reading .env file: ${dotenvFile}"
+if (dotenvFile.exists()) {
+    dotenvFile.eachLine { line ->
+        def keyValue = line.split("=")
+        if (keyValue.length == 2) {
+            envVars[keyValue[0].trim()] = keyValue[1].trim()
+        }
+    }
+}
+
 android {
     namespace = "com.example.client"
     compileSdk = flutter.compileSdkVersion
@@ -28,6 +41,11 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // 환경 변수 전달
+        // manifestPlaceholders = [
+        //     KAKAO_NATIVE_APP_KEY: envVars["KAKAO_NATIVE_APP_KEY"] ?: "",
+        //     applicationName :
+        // ]
     }
 
     buildTypes {
@@ -42,3 +60,4 @@ android {
 flutter {
     source = "../.."
 }
+

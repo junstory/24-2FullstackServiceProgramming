@@ -30,14 +30,21 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
   table_calendar: ^3.0.8
+  dio: ^5.7.0
+  kakao_flutter_sdk_user: ^1.9.6
+  url_launcher: ^6.3.1
+  flutter_dotenv: ^5.0.2
+  shared_preferences: ^2.0.18
+  network_info_plus: ^6.1.1
+  #qr_code_scanner: ^1.0.1
+  geolocator: ^13.0.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  dio: ^5.7.0
-  kakao_flutter_sdk_user: ^1.9.6
-  url_launcher: ^6.3.1
+  
 
 dev_dependencies:
   flutter_test:
@@ -55,7 +62,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
+  assets:
+    - lib/assets/logo.png
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.

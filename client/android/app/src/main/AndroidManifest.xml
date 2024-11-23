@@ -1,8 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- wifi관련 설정1,2 카메라3 gps4,5-->
+        <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+        <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+        <!-- <uses-permission android:name="android.permission.CAMERA" /> -->
+        <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+        <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <application
         android:label="client"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+       
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -30,6 +37,21 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+         <!-- 카카오 로그인 커스텀 URL 스킴 설정 -->
+        <!-- <activity 
+            android:name="com.kakao.sdk.flutter.AuthCodeCustomTabsActivity"
+            android:exported="true">
+            <intent-filter android:label="flutter_web_auth">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" /> -->
+                <!-- "kakao${YOUR_NATIVE_APP_KEY}://oauth" 형식의 앱 실행 스킴 설정 -->
+                <!-- 카카오 로그인 Redirect URI -->
+                <!-- <data android:scheme="${KAKAO_NATIVE_APP_KEY}" android:host="oauth"/>
+            </intent-filter>
+        </activity> -->
+        <!-- 카카오 로그인 END -->
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
