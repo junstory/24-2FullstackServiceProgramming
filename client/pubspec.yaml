@@ -38,7 +38,7 @@ dependencies:
   flutter_dotenv: ^5.0.2
   shared_preferences: ^2.0.18
   network_info_plus: ^6.1.1
-  #qr_code_scanner: ^1.0.1
+  # qr_code_scanner: ^1.0.1
   geolocator: ^13.0.2
 
   # The following adds the Cupertino Icons font to your application.

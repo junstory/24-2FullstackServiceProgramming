@@ -9,14 +9,17 @@ class WifiClockIn {
   Future<void> handleClockIn(BuildContext context, String user) async {
     try {
       String? ssid = await info.getWifiName();
-
-      if (ssid == null) {
+      String? sanitizedSsid = ssid?.replaceAll('"', '').trim();
+      print(ssid);
+      if (sanitizedSsid == null) {
         _showMessage(context, 'WiFi에 연결되어 있지 않습니다.');
-      } else if (ssid == "YourOfficeSSID") {
+      } else if (sanitizedSsid == "AndroidWifi") {
         // 서버로 출근 데이터 전송
+        print("출근 성공! (WiFi: $sanitizedSsid)");
         _showMessage(context, '출근 성공! (WiFi: $ssid)');
          await _sendClockInData(context, user);
       } else {
+        print("등록되지 않은 WiFi입니다. (현재: $sanitizedSsid)");
         _showMessage(context, '등록되지 않은 WiFi입니다. (현재: $ssid)');
       }
     } catch (e) {
@@ -27,7 +30,7 @@ class WifiClockIn {
    Future<void> _sendClockInData(BuildContext context, String user) async {
     try {
       final response = await _dio.post(
-        'http://10.0.2.2:3000/clockin', // 서버의 출근 엔드포인트
+        'http://10.0.2.2:3000/api/v1/user/commute/in', // 서버의 출근 엔드포인트
         data: {
           'method': 'wifi',
           //'wifiSsid': ssid,

@@ -3,6 +3,8 @@
 // import 'package:dio/dio.dart';
 // import './shared_preference_helper.dart';
 // class QrClockInScreen extends StatefulWidget {
+//   const QrClockInScreen({Key? key}) : super(key: key);
+  
 //   @override
 //   _QrClockInScreenState createState() => _QrClockInScreenState();
 // }
