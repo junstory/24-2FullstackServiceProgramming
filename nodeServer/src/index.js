@@ -23,6 +23,12 @@ app.use('/api/v1/plan', planRouter);
 app.use('/api/v1/admin', adminRouter);
 app.use('/oauth', oauthRouter);
 
+app.get('/health', (req, res) => {
+  res.json({
+    success: true,
+  });
+});
+
 app.use((req, res, next) => {
   res.status(404).json({
     success: false,
@@ -30,11 +36,7 @@ app.use((req, res, next) => {
   });
 });
 
-// app.get('/', (req, res) => {
-//   res.json({
-//     success: true,
-//   });
-// });
+
 
 app.listen(port, () => {
   console.log(`server is listening at ${port}`);
