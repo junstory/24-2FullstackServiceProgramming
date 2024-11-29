@@ -61,12 +61,7 @@ class _HomeScreenState  extends State<HomeScreen> {
                         '2024.10.08(화)',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
-                      IconButton(
-                        icon: Icon(Icons.settings),
-                        onPressed: () {
-                          // 설정 이동
-                        },
-                      ),
+                      
                     ],
                   ),
                   SizedBox(height: 24),
@@ -234,18 +229,18 @@ class _HomeScreenState  extends State<HomeScreen> {
                 print("WiFi로 출근하기 클릭");
               },
             ),
-            ListTile(
-              leading: Icon(Icons.qr_code),
-              title: Text('QR코드로 출근하기'),
-              onTap: () {
-            //     Navigator.push(
-            //   context,
-            //   MaterialPageRoute(builder: (context) => QrClockInScreen()),
-            // );
-                Navigator.pop(context);
-                print("QR코드로 출근하기 클릭");
-              },
-            ),
+            // ListTile(
+            //   leading: Icon(Icons.qr_code),
+            //   title: Text('QR코드로 출근하기'),
+            //   onTap: () {
+            // //     Navigator.push(
+            // //   context,
+            // //   MaterialPageRoute(builder: (context) => QrClockInScreen()),
+            // // );
+            //     Navigator.pop(context);
+            //     print("QR코드로 출근하기 클릭");
+            //   },
+            // ),
             ListTile(
               leading: Icon(Icons.gps_fixed),
               title: Text('GPS로 출근하기'),

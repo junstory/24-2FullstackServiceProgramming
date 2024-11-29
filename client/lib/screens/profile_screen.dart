@@ -92,13 +92,13 @@ class ProfileScreen extends StatelessWidget {
                 _buildListTile(
                   context,
                   icon: Icons.help,
-                  title: "고객센터",
+                  title: "오픈소스",
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                           builder: (context) =>
-                              PlaceholderScreen(title: "고객센터")),
+                              PlaceholderScreen(title: "오픈소스")),
                     );
                   },
                 ),
