@@ -1,6 +1,9 @@
 #=========================
 # Custom
 #=========================
+##terraform 전용
+.terraform
+terraform.tfstate*
 
 ##db는 개발을 위해 일단 공유
 ##data.db
