@@ -23,7 +23,8 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _checkServerHealth() async {
     try {
       final response = await _dio.get('http://10.0.2.2:3000/health');
-      if (response.statusCode == 200 && response.data['success'] == true) {
+      print(response.data);
+      if (response.statusCode == 200 && response.data['isSuccess'] == true) {
         // 서버 연결 성공 -> 로그인 화면으로 이동
         Navigator.pushReplacementNamed(context, '/login');
       } else {

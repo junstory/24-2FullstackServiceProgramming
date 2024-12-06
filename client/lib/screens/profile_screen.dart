@@ -1,11 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'login_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   // 더미 사용자 정보
-  final String userName = "Junho";
+  String userName = "Loading..."; // 사용자 이름 초기값
   final String profileImage =
-      "https://via.placeholder.com/150"; // 프로필 이미지 URL (임시)
+      "https://avatars.githubusercontent.com/u/67246681?v=4"; // 프로필 이미지 URL (임시)
+
+ @override
+  void initState() {
+    super.initState();
+    _loadUserName(); // 사용자 이름 불러오기
+  }
+
+  Future<void> _loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userName = prefs.getString('name') ?? "Unknown User"; // 저장된 이름 불러오기
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

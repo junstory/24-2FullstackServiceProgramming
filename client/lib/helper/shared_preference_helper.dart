@@ -2,18 +2,30 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPreferenceHelper {
   // 저장
-  static Future<void> saveLoginInfo(String userId, String accessToken) async {
+  static Future<void> saveLoginToken(String accessToken) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('userId', userId);
     await prefs.setString('accessToken', accessToken);
+  }
+
+  static Future<void> saveNameId(String name, int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('name', name);
+    await prefs.setInt('id', id);
   }
 
   // 불러오기
   static Future<Map<String, String?>> getLoginInfo() async {
     final prefs = await SharedPreferences.getInstance();
     return {
-      'userId': prefs.getString('userId'),
       'accessToken': prefs.getString('accessToken'),
+    };
+  }
+
+  // 불러오기
+  static Future<Map<String, String?>> getName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return {
+      'name': prefs.getString('name'),
     };
   }
 
@@ -22,5 +34,14 @@ class SharedPreferenceHelper {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('userId');
     await prefs.remove('accessToken');
+  }
+  
+  static Future<Map<String, dynamic>> getInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    return {
+      'id': prefs.getInt('id'),
+      'accessToken': prefs.getString('accessToken'),
+      'name': prefs.getString('name'),
+    };
   }
 }

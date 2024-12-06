@@ -143,8 +143,8 @@ export const adminCheckUserCommuteDAO = async (targetId, req) => {
       db.all(
         `SELECT * FROM commutes 
            WHERE user_id = ? 
-           AND strftime('%Y', go_to_work) = ? 
-           AND strftime('%m', go_to_work) = ?`,
+           AND strftime('%Y', plan_in) = ? 
+           AND strftime('%m', plan_in) = ?`,
         [targetId, String(year), month.toString().padStart(2, '0')],
         (err, rows) => {
           if (err) {

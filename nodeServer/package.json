@@ -14,10 +14,15 @@
   "license": "MIT",
   "dependencies": {
     "axios": "^1.7.7",
+    "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "full-icu": "^1.5.0",
-    "sqlite3": "^5.1.7"
+    "jsonwebtoken": "^9.0.2",
+    "sqlite3": "^5.1.7",
+    "swagger-autogen": "^2.23.7",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
   },
   "devDependencies": {
     "eslint": "^9.13.0",

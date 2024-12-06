@@ -47,6 +47,18 @@ export const userGetInfoController = async (req, res) => {
   }
 };
 
+export const userGetInfoByTokenController = async (req, res) => {
+  try {
+    console.log('GET user Info : ', req.user.id);
+    return res.send(
+      response(status.SUCCESS, await userGetInfoDAO(req.user.id)),
+    );
+  } catch (err) {
+    console.log('GET USER CTRL ERR: ', err);
+    res.status(400).send(response(status.BAD_REQUEST, err));
+  }
+};
+
 // export const userEditProfileController = async (req, res) => {
 //   try {
 //     console.log('Edit user Info : ', req.params.userId);

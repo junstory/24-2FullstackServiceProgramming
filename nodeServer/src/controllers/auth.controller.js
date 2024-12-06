@@ -2,11 +2,28 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import axios from 'axios';
-const oauthRouter = express();
+import { response } from '../../config/response.js';
+import { status } from '../../config/response.status.js';
+import { loginUserDAO } from '../models/user.dao.js';
+const authRouter = express();
 dotenv.config();
 
+authRouter.post('/login', async (req, res) => {
+  console.log('log in');
+  const { email, password } = req.body;
+  try {
+    console.log('login user : ', req.body);
+    return res.send(
+      response(status.SUCCESS, await loginUserDAO(email, password)),
+    );
+  } catch (err) {
+    console.log('LOGIN USER CTRL ERR: ', err);
+    res.status(400).send(response(status.BAD_REQUEST, err.Error));
+  }
+});
+
 // 카카오 로그인 초기화 경로 (로그인 페이지로 리디렉트)
-oauthRouter.get('/kakao', (req, res) => {
+authRouter.get('/kakao', (req, res) => {
   console.log('auth in');
   console.log(process.env.KAKAO_REST_API_KEY);
   console.log(process.env.KAKAO_REDIRECT_URI);
@@ -15,7 +32,7 @@ oauthRouter.get('/kakao', (req, res) => {
 });
 
 // 카카오 로그인 리디렉트 URI
-oauthRouter.get('/kakao/callback', async (req, res) => {
+authRouter.get('/kakao/callback', async (req, res) => {
   console.log('redirected');
   const code = req.query.code;
   try {
@@ -64,14 +81,14 @@ oauthRouter.get('/kakao/callback', async (req, res) => {
 });
 
 // 대시보드 페이지 (로그인 후 사용자 정보 확인 가능)
-oauthRouter.get('/dashboard', (req, res) => {
+authRouter.get('/dashboard', (req, res) => {
   res.send(`로그인 성공! <br>`);
 });
 
 // 로그아웃 경로
-oauthRouter.get('/logout', (req, res) => {
+authRouter.get('/logout', (req, res) => {
   req.session.destroy();
   res.redirect('/');
 });
 
-export default oauthRouter;
+export default authRouter;

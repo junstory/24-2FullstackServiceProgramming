@@ -7,10 +7,12 @@ import {
   userWorkStartController,
   userWorkEndController,
   userLinkCompanyController,
+  userGetInfoByTokenController,
 } from '../controllers/user.controller.js';
 export const userRouter = express.Router({ mergeParams: true });
 
 userRouter.get('/:userId', userGetInfoController);
+userRouter.get('/', userGetInfoByTokenController);
 userRouter.post('/', userCreateController);
 userRouter.post('/company', userLinkCompanyController);
 userRouter.delete('/:userId', userDeleteController);

@@ -1,6 +1,8 @@
-import sqlite3 from 'sqlite3';
-import { db, executeTransaction } from '../../config/db.config.js';
-import { userResponseDTO } from '../dtos/user.dto.js';
+import { db } from '../../config/db.config.js';
+import bcrypt from 'bcrypt';
+import { userResponseDTO, loginResDto } from '../dtos/user.dto.js';
+import { BaseError } from '../../config/error.js';
+import { generateToken } from '../util/jwt.js';
 
 //Create
 export const createUserDAO = async (user) => {
@@ -22,13 +24,23 @@ export const createUserDAO = async (user) => {
     });
 
     if (existingUser) {
-      throw new Error('이미 존재하는 이메일입니다.'); // 중복된 사용자 예외 발생
+      throw new BaseError('이미 존재하는 이메일입니다.'); // 중복된 사용자 예외 발생
     }
+
+    // 비밀번호 해시 생성
+    const hashedPassword = await bcrypt.hash(user.password, 10);
 
     const newUserId = await new Promise((resolve, reject) => {
       db.run(
-        `INSERT INTO users (email, name, gender, phone_num, birthday) VALUES (?, ?, ?, ?, ?)`,
-        [user.email, user.name, user.gender, user.phoneNumber, user.birthday],
+        `INSERT INTO users (email, name, gender, phone_num, birthday, password) VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          user.email,
+          user.name,
+          user.gender,
+          user.phoneNumber,
+          user.birthday,
+          hashedPassword,
+        ],
         function (err) {
           if (err) {
             console.error('createUserDAO error:', err);
@@ -77,25 +89,28 @@ export const userGetInfoDAO = async (userId) => {
     const userInfo = await new Promise((resolve, reject) => {
       db.get(
         `SELECT
-                    u.*,
-                    c.id AS company_id,
-                    uc.is_activated AS company_is_active,
-                    c.name AS company_name,
-                    r.id AS role_id,
-                    r.name AS role_name,
-                    co.id AS commute_id,
-                    co.plan_in,
-                    co.go_to_work,
-                    co.plan_out,
-                    co.get_off_work
-                FROM
-                    users u
-                LEFT JOIN user_company uc ON u.id = uc.user_id
-                LEFT JOIN company c ON uc.company_id = c.id
-                LEFT JOIN user_role ur ON u.id = ur.user_id
-                LEFT JOIN role r ON ur.role_id = r.id
-                LEFT JOIN commutes co ON u.id = co.user_id
-                WHERE u.id = ?;`,
+          u.*,
+          c.id AS company_id,
+          uc.is_activated AS company_is_active,
+          c.name AS company_name,
+          r.id AS role_id,
+          r.name AS role_name,
+          co.id AS commute_id,
+          co.plan_in AS today_plan_in,
+          co.go_to_work AS today_go_to_work,
+          co.plan_out AS today_plan_out,
+          co.get_off_work AS today_get_off_work,
+          co_next.plan_in AS next_plan_in,
+          co_next.plan_out AS next_plan_out
+        FROM
+          users u
+        LEFT JOIN user_company uc ON u.id = uc.user_id
+        LEFT JOIN company c ON uc.company_id = c.id
+        LEFT JOIN user_role ur ON u.id = ur.user_id
+        LEFT JOIN role r ON ur.role_id = r.id
+        LEFT JOIN commutes co ON u.id = co.user_id AND DATE(co.plan_in) = DATE('now')
+        LEFT JOIN commutes co_next ON u.id = co_next.user_id AND DATE(co_next.plan_in) = DATE('now', '+1 day')
+        WHERE u.id = ?;`,
         [userId],
         (err, row) => {
           if (err) {
@@ -106,10 +121,6 @@ export const userGetInfoDAO = async (userId) => {
               console.log('No data found');
               reject('No data found'); // 조회 결과 없을 시 reject
             }
-            // if(!row.company_id){
-            //     console.log('No company found');
-            //     reject("No company found"); // 조회 결과 없을 시 reject
-            // }
             console.log('Query result:', row);
             resolve(row); // 성공 시 resolve
           }
@@ -262,20 +273,23 @@ export const userWorkStartDAO = async (req) => {
     });
 
     if (existingCommute) {
-      throw '이미 오늘 출근 기록이 있습니다.'; // 중복된 출근 기록 예외 발생
+      throw new BaseError('이미 오늘 출근 기록이 있습니다.'); // 중복된 출근 기록 예외 발생
     }
+    // 출근 시간 기록
     const result = await new Promise((resolve, reject) => {
       db.run(
-        `INSERT INTO commutes (user_id, go_to_work) VALUES (?, CURRENT_TIMESTAMP)`,
+        `UPDATE commutes SET go_to_work = (datetime('now', 'localtime')) WHERE user_id = ? AND DATE(plan_in) = DATE('now')`,
         [req.userId],
         function (err) {
           if (err) {
             console.error('userWorkStartDAO error:', err);
             reject('출근 등록 실패');
+          } else if (this.changes === 0) {
+            reject('출근 시간을 기록할 수 없습니다.');
           } else {
             resolve({
               message: '출근 등록 성공',
-              commuteId: this.lastID,
+              changes: this.changes,
             });
           }
         },
@@ -292,20 +306,61 @@ export const userWorkStartDAO = async (req) => {
 //사용자 퇴근
 export const userWorkEndDAO = async (req) => {
   try {
+    // 오늘 날짜의 퇴근 예정(plan_out)이 존재하는지 확인
+    const existingPlan = await new Promise((resolve, reject) => {
+      db.get(
+        `SELECT id FROM commutes WHERE user_id = ? AND DATE(plan_out) = DATE('now')`,
+        [req.userId],
+        (err, row) => {
+          if (err) {
+            console.error('Error checking existing plan:', err);
+            reject('오늘 퇴근 예정 확인 실패');
+          } else {
+            resolve(row); // row가 있으면 퇴근 예정 존재
+          }
+        },
+      );
+    });
+
+    if (!existingPlan) {
+      throw '오늘 퇴근 예정이 없습니다.'; // 퇴근 예정이 없으면 예외 발생
+    }
+
+    // 이미 퇴근 기록이 있는지 확인
+    const existingCommute = await new Promise((resolve, reject) => {
+      db.get(
+        `SELECT id FROM commutes WHERE user_id = ? AND DATE(plan_out) = DATE('now') AND get_off_work IS NOT NULL`,
+        [req.userId],
+        (err, row) => {
+          if (err) {
+            console.error('Error checking existing commute:', err);
+            reject('퇴근 기록 확인 실패');
+          } else {
+            resolve(row); // row가 있으면 이미 퇴근 기록이 있음
+          }
+        },
+      );
+    });
+
+    if (existingCommute) {
+      throw new BaseError('이미 오늘 퇴근 기록이 있습니다.'); // 중복된 퇴근 기록 예외 발생
+    }
+
+    // 퇴근 시간 기록
     const result = await new Promise((resolve, reject) => {
       db.run(
-        `UPDATE commutes SET get_off_work = CURRENT_TIMESTAMP WHERE user_id = ? AND get_off_work IS NULL`,
+        `UPDATE commutes SET get_off_work = (datetime('now', 'localtime')) WHERE user_id = ? AND DATE(plan_out) = DATE('now')`,
         [req.userId],
         function (err) {
           if (err) {
             console.error('userWorkEndDAO error:', err);
             reject('퇴근 등록 실패');
           } else if (this.changes === 0) {
-            reject('출근 기록이 없거나 이미 퇴근 처리된 사용자입니다.');
+            reject('퇴근 시간을 기록할 수 없습니다.');
           } else {
             resolve({
               message: '퇴근 등록 성공',
-              commuteId: this.lastID,
+              changes: this.changes,
             });
           }
         },
@@ -315,7 +370,7 @@ export const userWorkEndDAO = async (req) => {
     return result;
   } catch (error) {
     console.error('Error in userWorkEndDAO:', error);
-    throw error;
+    throw new BaseError(error);
   }
 };
 
@@ -391,6 +446,48 @@ export const linkUserToCompanyDAO = async (userId, companyId) => {
     });
   } catch (error) {
     console.error('Error in linkUserToCompanyDAO:', error);
+    throw error;
+  }
+};
+
+//login
+export const loginUserDAO = async (email, password) => {
+  try {
+    const user = await new Promise((resolve, reject) => {
+      db.get(
+        `SELECT id, email, password, name FROM users WHERE email = ?`,
+        [email],
+        (err, row) => {
+          if (err) {
+            console.error('Error querying user:', err);
+            reject('사용자 조회 실패');
+          } else {
+            resolve(row);
+          }
+        },
+      );
+    });
+
+    if (!user) {
+      throw new Error('사용자가 존재하지 않습니다.');
+    }
+
+    // 비밀번호 해시 검증
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new Error('비밀번호가 올바르지 않습니다.');
+    }
+
+    // JWT 생성
+    const token = generateToken({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    });
+
+    return loginResDto(token);
+  } catch (error) {
+    console.error('Error in loginUserDAO:', error);
     throw error;
   }
 };

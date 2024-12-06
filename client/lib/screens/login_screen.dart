@@ -39,8 +39,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       //나중에 수정 예정
-      final response = await _dio.get(
-        'http://10.0.2.2:3000/health', // 로그인 API 엔드포인트
+      final response = await _dio.post(
+        'http://10.0.2.2:3000/auth/login', // 로그인 API 엔드포인트
         data: {
           "email": email,
           "password": password,
@@ -49,15 +49,13 @@ class _LoginScreenState extends State<LoginScreen> {
           headers: {"Content-Type": "application/json"},
         ),
       );
-
-      if (response.statusCode == 200 && response.data['success'] == true) {
+      print(response.data);
+      print(response.data['result']['token']);
+      if (response.statusCode == 200 && response.data['isSuccess'] == true) {
         // final userId = response.data['userId']; // 서버에서 반환된 사용자 ID
         // final accessToken = response.data['accessToken']; // 서버에서 반환된 액세스 토큰
 
-        final userId ="9"; // 서버에서 반환된 사용자 ID
-        final accessToken = "test"; // 서버에서 반환된 액세스 토큰
-        await SharedPreferenceHelper.saveLoginInfo(userId, accessToken);
-
+        await SharedPreferenceHelper.saveLoginToken(response.data['result']['token']);
         // 메인 화면으로 이동
         Navigator.pushReplacementNamed(context, '/main');
         // 로그인 성공
@@ -71,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // 서버 연결 실패 또는 네트워크 오류
       String errorMessage = '서버와의 연결에 실패했습니다.';
       if (error.response != null) {
-        errorMessage = '서버 오류: 상태 코드 ${error.response?.statusCode}';
+        errorMessage = '오류: ${error.response?.data['message']}';
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMessage)),

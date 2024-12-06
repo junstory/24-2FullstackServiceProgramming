@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import "../helper/wifi_clock_in.dart";
-import  '../helper/qr_clock_in.dart';
+//import  '../helper/qr_clock_in.dart';
 import '../helper/shared_preference_helper.dart';
 import '../helper/gps_clock_in.dart';
+import 'package:dio/dio.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -11,23 +14,107 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState  extends State<HomeScreen> {
   final GpsClockIn _gpsClockIn = GpsClockIn();
-  String? userId;
+  String formattedDate = ''; // 현재 날짜
+  int? userId; // 유저 ID
   String? accessToken;
+  String userName = "Loading..."; // 유저 이름 기본값
+  String email = "Loading..."; // 이메일 기본값
+
+  String? planedToGo; // 출근 예정 시간
+  String? goToWork; // 실제 출근 시간
+  String? planedToLeave; // 퇴근 예정 시간
+  String? nextPlanedToGo; // 다음날 출근 예정 시간
+  String? nextPlanedToLeave; // 다음날 퇴근 예정 시간
 
   @override
   void initState() {
     super.initState();
     _loadUserInfo();
+    _initializeLocale();
+    
+  }
+  Future<void> _initializeLocale() async {
+    await initializeDateFormatting('ko'); // 한국어 로케일 초기화
+    _getCurrentDate();
+  }
+
+  void _getCurrentDate() {
+    final now = DateTime.now();
+    final formatter = DateFormat('yyyy.MM.dd (E)', 'ko'); // 한국어 요일
+    setState(() {
+      formattedDate = formatter.format(now); // 예: 2024.10.08 (화)
+    });
   }
 
   Future<void> _loadUserInfo() async {
-    // SharedPreferences에서 유저 정보 가져오기
-    final userInfo = await SharedPreferenceHelper.getLoginInfo();
-    setState(() {
-      userId = userInfo['userId'];
+    try {
+      // SharedPreferences에서 accessToken 가져오기
+      final userInfo = await SharedPreferenceHelper.getLoginInfo();
       accessToken = userInfo['accessToken'];
-    });
+
+      if (accessToken != null) {
+        // 서버에서 유저 정보 가져오기
+        await _fetchUserDetails();
+      } else {
+        print('Access token is null');
+      }
+    } catch (e) {
+      print('Error loading user info: $e');
+    }
   }
+
+  Future<void> _fetchUserDetails() async {
+    try {
+      final dio = Dio();
+      final response = await dio.get(
+        'http://10.0.2.2:3000/api/v1/user', // 유저 정보 API
+        options: Options(headers: {
+          'Authorization': 'Bearer $accessToken',
+        }),
+      );
+      print(response.data['result']['today']['planedToGo']);
+      if (response.statusCode == 200) {
+        final result = response.data['result'];
+         await SharedPreferenceHelper.saveNameId(response.data['result']['name'], response.data['result']['id']);
+        setState(() {
+          userName = result['name'] ?? "Unknown";
+          email = result['email'] ?? "Unknown";
+          planedToGo = result['today']['planedToGo']?? "--:--";
+          goToWork = result['today']['goToWork'] ?? "--:--";
+          planedToLeave = result['today']['planedToLeave'] ?? "--:--";
+          nextPlanedToGo = result['next']['planedToGo']?? "--:--";
+          nextPlanedToLeave = result['next']['planedToLeave']?? "--:--";
+        });
+      } else {
+        print('Failed to fetch user details: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching user details: $e');
+    }
+  }
+// 시간을 변환하는 헬퍼 함수 (hh:mm 형식)
+  String formatTimeForClock(String? time) {
+  if (time == null) return "--:--";
+  
+  try {
+    if (time.contains(' ')) {
+      // "2024-12-06 12:24:59" 형식
+      time = time.split(' ')[1]; // 시간 부분만 추출
+    }
+    
+    if (time.contains(':')) {
+      // "12:24:59" 또는 "18:00" 형식
+      return time.substring(0, 5); // 앞의 HH:mm 부분만 반환
+    } else if (time.length == 4) {
+      // "1800" 형식
+      return '${time.substring(0, 2)}:${time.substring(2)}';
+    }
+  } catch (e) {
+    print('Error formatting time: $e');
+  }
+  
+  return "--:--";
+}
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +145,7 @@ class _HomeScreenState  extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '2024.10.08(화)',
+                        formattedDate,
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       
@@ -114,7 +201,7 @@ class _HomeScreenState  extends State<HomeScreen> {
                                 ),
                                 SizedBox(height: 8),
                                 Text(
-                                  '09:00', // 출근 시간
+                                  formatTimeForClock(planedToGo),// 출근 예정 시간
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -124,7 +211,7 @@ class _HomeScreenState  extends State<HomeScreen> {
                                 ), 
                                 SizedBox(height: 3),
                                 Text(
-                                  '--:--', // 실제 출근 시간
+                                  formatTimeForClock(goToWork), // 실제 출근 시간
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -194,9 +281,9 @@ class _HomeScreenState  extends State<HomeScreen> {
                           Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _buildWorkInfoColumn('출근 예정 시간', '09h00m'),
+                            _buildWorkInfoColumn('출근 예정 시간', formatTimeForClock(nextPlanedToGo)),
                             VerticalDivider(width: 1, thickness: 1),
-                            _buildWorkInfoColumn('퇴근 예정 시간', '18h00m'),
+                            _buildWorkInfoColumn('퇴근 예정 시간', formatTimeForClock(nextPlanedToLeave)),
                           ],
                         ),
                         ],
@@ -225,7 +312,7 @@ class _HomeScreenState  extends State<HomeScreen> {
               title: Text('WiFi로 출근하기'),
               onTap: () {
                 Navigator.pop(context);
-                WifiClockIn().handleClockIn(context, userId.toString());
+                WifiClockIn().handleClockIn(context);
                 print("WiFi로 출근하기 클릭");
               },
             ),
@@ -246,7 +333,7 @@ class _HomeScreenState  extends State<HomeScreen> {
               title: Text('GPS로 출근하기'),
               onTap: () {
                 Navigator.pop(context);
-                _gpsClockIn.handleClockIn(context, userId.toString());
+                GpsClockIn().handleClockIn(context);
                 print("GPS로 출근하기 클릭");
               },
             ),
