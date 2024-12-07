@@ -7,9 +7,11 @@ class SharedPreferenceHelper {
     await prefs.setString('accessToken', accessToken);
   }
 
-  static Future<void> saveNameIdCompany(String name, int id, int companyId) async {
+  static Future<void> saveNameIdCompany(String name, int id, int companyId, String companyName, String phoneNumber) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('name', name);
+    await prefs.setString('companyName', companyName);
+    await prefs.setString('phoneNumber', phoneNumber);
     await prefs.setString('companyId', companyId.toString());
     await prefs.setInt('id', id);
   }
@@ -50,6 +52,7 @@ class SharedPreferenceHelper {
       'accessToken': prefs.getString('accessToken'),
       'name': prefs.getString('name'),
       'companyId': prefs.getString('companyId'),
+      'companyName': prefs.getString('companyName'),
       'lastUpdated': prefs.getString('lastUpdated'),
       'scheduleData': prefs.getString('scheduleData'),
     };

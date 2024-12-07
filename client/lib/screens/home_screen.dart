@@ -13,6 +13,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState  extends State<HomeScreen> {
+ bool isLoading = true;
+
   final GpsClockIn _gpsClockIn = GpsClockIn();
   String formattedDate = ''; // 현재 날짜
   int? userId; // 유저 ID
@@ -23,9 +25,11 @@ class _HomeScreenState  extends State<HomeScreen> {
   String? planedToGo; // 출근 예정 시간
   String? goToWork; // 실제 출근 시간
   String? planedToLeave; // 퇴근 예정 시간
+  String? goOffWork; // 실제 퇴근 시간
   String? nextPlanedToGo; // 다음날 출근 예정 시간
   String? nextPlanedToLeave; // 다음날 퇴근 예정 시간
 
+  String workStatus = "출근";
   @override
   void initState() {
     super.initState();
@@ -75,7 +79,7 @@ class _HomeScreenState  extends State<HomeScreen> {
       print(response.data['result']['today']['planedToGo']);
       if (response.statusCode == 200) {
         final result = response.data['result'];
-         await SharedPreferenceHelper.saveNameIdCompany(response.data['result']['name'], response.data['result']['id'], response.data['result']['companyId']);
+         await SharedPreferenceHelper.saveNameIdCompany(response.data['result']['name'], response.data['result']['id'], response.data['result']['companyId'], response.data['result']['companyName'], response.data['result']['phoneNumber']);
          
         setState(() {
           userName = result['name'] ?? "Unknown";
@@ -83,14 +87,24 @@ class _HomeScreenState  extends State<HomeScreen> {
           planedToGo = result['today']['planedToGo']?? "--:--";
           goToWork = result['today']['goToWork'] ?? "--:--";
           planedToLeave = result['today']['planedToLeave'] ?? "--:--";
+          goOffWork = result['today']['getOffWork'] ?? "--:--";
           nextPlanedToGo = result['next']['planedToGo']?? "--:--";
           nextPlanedToLeave = result['next']['planedToLeave']?? "--:--";
         });
+        planedToGo =formatTimeForClock(planedToGo);
+        planedToLeave =formatTimeForClock(planedToLeave);
+        goToWork = formatTimeForClock(goToWork);
+        goOffWork = formatTimeForClock(goOffWork);
       } else {
         print('Failed to fetch user details: ${response.statusCode}');
       }
     } catch (e) {
       print('Error fetching user details: $e');
+    }finally {
+      print('User info loaded');
+      setState(() {
+        isLoading = false; // 로딩 종료
+      });
     }
   }
 // 시간을 변환하는 헬퍼 함수 (hh:mm 형식)
@@ -119,6 +133,13 @@ class _HomeScreenState  extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+     if (isLoading) {
+      return Center(child: CircularProgressIndicator()); // 로딩 상태 표시
+    }
+    bool isClockIn = goToWork != "--:--";
+    isClockIn ? workStatus = "퇴근" : workStatus = "출근";
+    print('$isClockIn $planedToLeave $goOffWork $planedToGo $goToWork');
+
     return Scaffold(
       body: Stack(
         children: [
@@ -160,7 +181,7 @@ class _HomeScreenState  extends State<HomeScreen> {
                       onTap: () {
                         // 버튼 클릭 이벤트 처리
                         print("출근 버튼 클릭");
-                        _showClockInDialog(context);
+                        isClockIn? _showClockOutDialog(context) :_showClockInDialog(context);
                       },
                     child: Stack(
                       alignment: Alignment.center,
@@ -193,7 +214,7 @@ class _HomeScreenState  extends State<HomeScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  '출근',
+                                  workStatus, //출티근 상태
                                   style: TextStyle(
                                     fontSize: 32,
                                     fontWeight: FontWeight.bold,
@@ -202,7 +223,7 @@ class _HomeScreenState  extends State<HomeScreen> {
                                 ),
                                 SizedBox(height: 8),
                                 Text(
-                                  formatTimeForClock(planedToGo),// 출근 예정 시간
+                                  isClockIn? planedToLeave.toString():planedToGo.toString(),// 출근 예정 시간
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -212,7 +233,7 @@ class _HomeScreenState  extends State<HomeScreen> {
                                 ), 
                                 SizedBox(height: 3),
                                 Text(
-                                  formatTimeForClock(goToWork), // 실제 출근 시간
+                                  isClockIn? goOffWork.toString(): goToWork.toString(), // 실제 출근 시간
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -315,6 +336,7 @@ class _HomeScreenState  extends State<HomeScreen> {
                 Navigator.pop(context);
                 WifiClockIn().handleClockIn(context);
                 print("WiFi로 출근하기 클릭");
+                _loadUserInfo();
               },
             ),
             // ListTile(
@@ -337,6 +359,61 @@ class _HomeScreenState  extends State<HomeScreen> {
                 GpsClockIn().handleClockIn(context);
                 print("GPS로 출근하기 클릭");
               },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _handleClockOut() async {
+    try {
+      final dio = Dio();
+      final response = await dio.post(
+        'http://10.0.2.2:3000/api/v1/user/commute/out',
+        data: {
+          "userId": userId,
+        },
+        options: Options(
+          headers: {'Authorization': 'Bearer $accessToken'},
+        ),
+      );
+
+      if (response.statusCode == 200 && response.data['isSuccess']) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("퇴근이 성공적으로 처리되었습니다!")),
+        );
+        _loadUserInfo();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("퇴근 처리 실패: ${response.data['message']}")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("서버와의 연결 중 오류가 발생했습니다: $e")),
+      );
+    }
+  }
+
+  void _showClockOutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("퇴근 확인"),
+          content: Text("퇴근하시는게 맞나요?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("아니요"),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context); // 팝업 닫기
+                await _handleClockOut(); // 퇴근 처리
+              },
+              child: Text("네"),
             ),
           ],
         );
