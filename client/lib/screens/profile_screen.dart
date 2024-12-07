@@ -1,7 +1,10 @@
+import 'package:client/screens/company_change_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../helper/shared_preference_helper.dart';
 import 'login_screen.dart';
+import 'license_screen.dart';
+import 'myinfo_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -9,23 +12,56 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // 더미 사용자 정보
   String userName = "Loading..."; // 사용자 이름 초기값
+  String companyName = "Loading..."; // 회사 이름 초기값
   final String profileImage =
       "https://avatars.githubusercontent.com/u/67246681?v=4"; // 프로필 이미지 URL (임시)
 
- @override
+  @override
   void initState() {
     super.initState();
-    _loadUserName(); // 사용자 이름 불러오기
+    _loadUserInfo(); // 사용자 이름과 회사 정보 불러오기
   }
 
-  Future<void> _loadUserName() async {
-    final prefs = await SharedPreferences.getInstance();
+  Future<void> _loadUserInfo() async {
+    final userInfo = await SharedPreferenceHelper.getInfo();
     setState(() {
-      userName = prefs.getString('name') ?? "Unknown User"; // 저장된 이름 불러오기
+      userName = userInfo["name"] ?? "Unknown User";
+      companyName = userInfo['companyName'] ?? "Unknown Company";
     });
   }
+
+  Future<void> _logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    bool confirmed = await _showConfirmationDialog(context);
+    if (confirmed) {
+      await prefs.clear(); // SharedPreferences 데이터 삭제
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+      );
+    }
+  }
+
+  Future<bool> _showConfirmationDialog(BuildContext context) {
+  return showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('로그아웃'),
+      content: Text('정말 로그아웃 하시겠습니까?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false), // 명시적으로 false 반환
+          child: Text('취소'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true), // 명시적으로 true 반환
+          child: Text('확인'),
+        ),
+      ],
+    ),
+  ).then((value) => value ?? false); // null 처리 (사용자가 팝업 외부 클릭으로 닫을 경우)
+}
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +73,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           IconButton(
             icon: Icon(Icons.notifications),
             onPressed: () {
-              // 알림 기능
+              // 알림 화면으로 이동
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PlaceholderScreen(title: "알림"),
+                ),
+              );
             },
           ),
         ],
@@ -61,6 +103,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                SizedBox(height: 4),
+                Text(
+                  companyName,
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
               ],
             ),
           ),
@@ -75,11 +122,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   icon: Icons.person,
                   title: "내 정보 관리",
                   onTap: () {
-                    Navigator.push(
+                   Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) => PlaceholderScreen(
-                              title: "내 정보 관리")), // PlaceholderScreen은 임시 화면
+                      MaterialPageRoute(builder: (context) => MyinfoScreen()),
                     );
                   },
                 ),
@@ -90,25 +135,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              PlaceholderScreen(title: "회사 변경")),
+                      MaterialPageRoute(builder: (context) => CompanyChangeScreen()),
                     );
                   },
                 ),
-                _buildListTile(
-                  context,
-                  icon: Icons.check_circle,
-                  title: "승인 내역",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              PlaceholderScreen(title: "승인 내역")),
-                    );
-                  },
-                ),
+                // _buildListTile(
+                //   context,
+                //   icon: Icons.check_circle,
+                //   title: "승인 내역",
+                //   onTap: () {
+                //     Navigator.push(
+                //       context,
+                //       MaterialPageRoute(
+                //         builder: (context) =>
+                //             PlaceholderScreen(title: "승인 내역"),
+                //       ),
+                //     );
+                //   },
+                // ),
                 _buildListTile(
                   context,
                   icon: Icons.help,
@@ -116,9 +160,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              PlaceholderScreen(title: "오픈소스")),
+                      MaterialPageRoute(builder: (context) => OssLicenseScreen()),
                     );
                   },
                 ),
@@ -130,13 +172,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton.icon(
-              onPressed: () {
-                // 로그아웃 처리
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                );
-              },
+              onPressed: () => _logout(context),
               icon: Icon(Icons.power_settings_new),
               label: Text("로그아웃"),
               style: ElevatedButton.styleFrom(
@@ -151,7 +187,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // 기능 항목을 빌드하는 메서드
   ListTile _buildListTile(BuildContext context,
       {required IconData icon, required String title, required Function() onTap}) {
     return ListTile(
