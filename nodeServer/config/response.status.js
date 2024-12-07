@@ -11,7 +11,7 @@ export const status = {
   },
 
   BAD_REQUEST: {
-    status: 400,
+    status: 200,
     isSuccess: false,
     code: '4001',
     message: '잘못된 요청입니다',

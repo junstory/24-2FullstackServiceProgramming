@@ -31,7 +31,7 @@ export const userLinkCompanyController = async (req, res) => {
     );
   } catch (err) {
     console.log('LINK USER CTRL ERR: ', err);
-    res.status(400).send(response(status.BAD_REQUEST, err));
+    res.send(response(status.BAD_REQUEST, err));
   }
 };
 
@@ -117,8 +117,9 @@ export const userWorkStartController = async (req, res) => {
 
 export const userWorkEndController = async (req, res) => {
   try {
-    console.log('End work user: ', req.body.userId);
-    return res.send(response(status.SUCCESS, await userWorkEndDAO(req.body)));
+    let userId = req.user.id || req.body.userId;
+    console.log('End work user: ', userId);
+    return res.send(response(status.SUCCESS, await userWorkEndDAO(userId)));
   } catch (err) {
     console.log('WORK END CTRL ERR: ', err);
     res.status(400).send(response(status.BAD_REQUEST, err));

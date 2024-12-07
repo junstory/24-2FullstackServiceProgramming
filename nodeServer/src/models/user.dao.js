@@ -147,7 +147,7 @@ export const updateUserDAO = async (userId, updatedUser) => {
                     gender = ?, 
                     phone_num = ?, 
                     birthday = ?, 
-                    updated_at = CURRENT_TIMESTAMP 
+                    updated_at = (datetime('now', 'localtime')) 
                 WHERE id = ?`,
         [
           updatedUser.email,
@@ -304,13 +304,13 @@ export const userWorkStartDAO = async (req) => {
 };
 
 //사용자 퇴근
-export const userWorkEndDAO = async (req) => {
+export const userWorkEndDAO = async (userId) => {
   try {
     // 오늘 날짜의 퇴근 예정(plan_out)이 존재하는지 확인
     const existingPlan = await new Promise((resolve, reject) => {
       db.get(
         `SELECT id FROM commutes WHERE user_id = ? AND DATE(plan_out) = DATE('now')`,
-        [req.userId],
+        [userId],
         (err, row) => {
           if (err) {
             console.error('Error checking existing plan:', err);
@@ -323,14 +323,14 @@ export const userWorkEndDAO = async (req) => {
     });
 
     if (!existingPlan) {
-      throw '오늘 퇴근 예정이 없습니다.'; // 퇴근 예정이 없으면 예외 발생
+      throw new BaseError('오늘 퇴근 예정이 없습니다.'); // 퇴근 예정이 없으면 예외 발생
     }
 
     // 이미 퇴근 기록이 있는지 확인
     const existingCommute = await new Promise((resolve, reject) => {
       db.get(
         `SELECT id FROM commutes WHERE user_id = ? AND DATE(plan_out) = DATE('now') AND get_off_work IS NOT NULL`,
-        [req.userId],
+        [userId],
         (err, row) => {
           if (err) {
             console.error('Error checking existing commute:', err);
@@ -350,7 +350,7 @@ export const userWorkEndDAO = async (req) => {
     const result = await new Promise((resolve, reject) => {
       db.run(
         `UPDATE commutes SET get_off_work = (datetime('now', 'localtime')) WHERE user_id = ? AND DATE(plan_out) = DATE('now')`,
-        [req.userId],
+        [userId],
         function (err) {
           if (err) {
             console.error('userWorkEndDAO error:', err);
