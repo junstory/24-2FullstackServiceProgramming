@@ -28,6 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+
   flutter:
     sdk: flutter
 
@@ -45,6 +46,9 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   
+  flutter_oss_licenses: ^2.0.1
+  
+
 
 dev_dependencies:
   flutter_test:
