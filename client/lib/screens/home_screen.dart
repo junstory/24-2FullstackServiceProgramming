@@ -75,7 +75,8 @@ class _HomeScreenState  extends State<HomeScreen> {
       print(response.data['result']['today']['planedToGo']);
       if (response.statusCode == 200) {
         final result = response.data['result'];
-         await SharedPreferenceHelper.saveNameId(response.data['result']['name'], response.data['result']['id']);
+         await SharedPreferenceHelper.saveNameIdCompany(response.data['result']['name'], response.data['result']['id'], response.data['result']['companyId']);
+         
         setState(() {
           userName = result['name'] ?? "Unknown";
           email = result['email'] ?? "Unknown";

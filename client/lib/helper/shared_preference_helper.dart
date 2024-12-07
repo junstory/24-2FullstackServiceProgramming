@@ -7,10 +7,17 @@ class SharedPreferenceHelper {
     await prefs.setString('accessToken', accessToken);
   }
 
-  static Future<void> saveNameId(String name, int id) async {
+  static Future<void> saveNameIdCompany(String name, int id, int companyId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('name', name);
+    await prefs.setString('companyId', companyId.toString());
     await prefs.setInt('id', id);
+  }
+
+  static Future<void> saveSchedule(String lastUpdaed, String scheduleData) async{
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('lastUpdated', lastUpdaed);
+    await prefs.setString('scheduleData', scheduleData);
   }
 
   // 불러오기
@@ -42,6 +49,9 @@ class SharedPreferenceHelper {
       'id': prefs.getInt('id'),
       'accessToken': prefs.getString('accessToken'),
       'name': prefs.getString('name'),
+      'companyId': prefs.getString('companyId'),
+      'lastUpdated': prefs.getString('lastUpdated'),
+      'scheduleData': prefs.getString('scheduleData'),
     };
   }
 }
