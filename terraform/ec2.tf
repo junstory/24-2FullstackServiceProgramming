@@ -22,7 +22,8 @@ resource "aws_instance" "ec2_instance" {
     #!/bin/bash
     sudo apt update -y
     sudo apt upgrade -y
-    sudo apt install apache2 -y
+                  # Git 설치
+              sudo apt install -y git
 
     INSTANCE_NAME="${var.instance_name}'s server ${count.index}"
     echo "<html><body><h1>$INSTANCE_NAME</h1></body></html>" | sudo tee /var/www/html/index.html

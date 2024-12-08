@@ -6,6 +6,7 @@ import { generateToken } from '../util/jwt.js';
 
 //Create
 export const createUserDAO = async (user) => {
+  console.log('user:', user);
   try {
     // 사용자 중복 확인
     const existingUser = await new Promise((resolve, reject) => {

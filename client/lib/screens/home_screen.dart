@@ -136,7 +136,8 @@ class _HomeScreenState  extends State<HomeScreen> {
      if (isLoading) {
       return Center(child: CircularProgressIndicator()); // 로딩 상태 표시
     }
-    bool isClockIn = goToWork != "--:--";
+    //bool isClockIn = goToWork != "--:--";
+    bool isClockIn = false;
     isClockIn ? workStatus = "퇴근" : workStatus = "출근";
     print('$isClockIn $planedToLeave $goOffWork $planedToGo $goToWork');
 

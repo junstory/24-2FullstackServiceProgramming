@@ -2,14 +2,6 @@
 import sqlite3 from 'sqlite3';
 sqlite3.verbose();
 
-export const db = new sqlite3.Database('./data.db', (err) => {
-  if (err) {
-    //console.error('Error opening database:', err);
-  } else {
-    //console.log('Connected to the SQLite database.');
-  }
-});
-
 export const test_db = new sqlite3.Database('./data_test.db', (err) => {
   if (err) {
     //console.error('Error opening database:', err);
@@ -39,4 +31,4 @@ export const executeTransaction = async (queries) => {
 
 //db.close();
 
-export default db;
+export default test_db;

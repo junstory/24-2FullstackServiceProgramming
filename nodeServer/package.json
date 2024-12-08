@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "jest",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js ./src/__test__ --detectOpenHandles",
     "dev": "nodemon src/index.js",
     "format": "prettier --write --cache src/*.js",
     "lint": "eslint --cache src/*.js"

@@ -1,5 +1,5 @@
 region = "ap-northeast-2"
-project_name = "KHU ACC Hands-on"
+project_name = "Fullsatck Service Programming"
 target_label = "dev"
 
 

@@ -5,7 +5,7 @@ variable "region" {
 }
 
 variable "project_name" {
-  description = "project name"
+  description = "FSP BE"
   type = string
   default = null
 }
@@ -44,7 +44,7 @@ variable "ec2_instance_spec" {
 variable "instance_name" {
   description = "EC2 Name"
   type = string
-  default = "juuun"
+  default = "nodeServer"
 }
 
 variable "user_names" {

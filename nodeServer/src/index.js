@@ -52,3 +52,5 @@ app.use((req, res, next) => {
 app.listen(port, () => {
   console.log(`server is listening at ${port}`);
 });
+
+export default app;
