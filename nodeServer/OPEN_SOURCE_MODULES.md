@@ -43,6 +43,10 @@
 10. **yamljs** (`^0.3.0`)
     - 공식 웹사이트: [https://www.npmjs.com/package/yamljs](https://www.npmjs.com/package/yamljs)
     - 라이선스: MIT License
+11. **PM2**
+    - 공식 웹사이트: [https://pm2.keymetrics.io/](https://pm2.keymetrics.io/)
+    - 라이선스: [AGPL-3.0](https://opensource.org/licenses/AGPL-3.0)
+   
 
 ## DevDependencies
 
