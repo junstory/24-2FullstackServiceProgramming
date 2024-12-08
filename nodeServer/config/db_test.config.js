@@ -10,25 +10,6 @@ export const test_db = new sqlite3.Database('./data_test.db', (err) => {
   }
 });
 
-export const executeTransaction = async (queries) => {
-  console.log('executeTransaction : ', queries);
-  return new Promise((resolve, reject) => {
-    db.serialize(() => {
-      db.run('BEGIN TRANSACTION');
-      try {
-        for (const query of queries) {
-          db.run(query);
-        }
-        db.run('COMMIT');
-        resolve();
-      } catch (error) {
-        db.run('ROLLBACK');
-        reject(error);
-      }
-    });
-  });
-};
-
 //db.close();
 
 export default test_db;

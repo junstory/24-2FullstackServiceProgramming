@@ -10,14 +10,6 @@ export const db = new sqlite3.Database('./data.db', (err) => {
   }
 });
 
-export const test_db = new sqlite3.Database('./data_test.db', (err) => {
-  if (err) {
-    //console.error('Error opening database:', err);
-  } else {
-    //console.log('Connected to the SQLite test database.');
-  }
-});
-
 export const executeTransaction = async (queries) => {
   console.log('executeTransaction : ', queries);
   return new Promise((resolve, reject) => {
