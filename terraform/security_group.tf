@@ -38,7 +38,7 @@ resource "aws_security_group_rule" "terraform-ec2-ssh-i" {
   }
 }
 
-resource "aws_security_group_rule" "terraform-ec2-ssh-i" {
+resource "aws_security_group_rule" "terraform-ec2-node" {
   type = "ingress"
   from_port = 3000
   to_port = 3000

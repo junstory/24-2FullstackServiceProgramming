@@ -11,15 +11,7 @@ output "instance_info1" {
     }
 }
 
-output "instance_info2" {
-    description = "EC2 instance ID"
 
-    value = {
-        instance_id = aws_instance.ec2_instance[1].id
-        public_ip = aws_instance.ec2_instance[1].public_ip
-        private_ip = aws_instance.ec2_instance[1].private_ip
-    }
-}
 
 output "user_list" {
     description = "IAM User List"
@@ -33,6 +25,6 @@ output "user_list" {
 output "access_instance" {
     value = {
         instance1 = "http://${aws_instance.ec2_instance[0].public_ip}"
-        instance2 = "http://${aws_instance.ec2_instance[1].public_ip}"
+        
     }
 }

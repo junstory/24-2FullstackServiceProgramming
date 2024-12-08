@@ -5,15 +5,15 @@ variable "region" {
 }
 
 variable "project_name" {
-  description = "FSP BE"
+  description = "project name"
   type = string
-  default = null
+  default = "test"
 }
 
 variable "target_label" {
   description = "dev/stage/prod"
   type = string
-  default = null
+  default = "test/target"
 }
 
 variable "vpc_cidr" {
@@ -44,7 +44,7 @@ variable "ec2_instance_spec" {
 variable "instance_name" {
   description = "EC2 Name"
   type = string
-  default = "nodeServer"
+  default = "juuun"
 }
 
 variable "user_names" {

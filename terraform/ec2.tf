@@ -1,6 +1,6 @@
 resource "aws_instance" "ec2_instance" {
 
-  count = 2
+  count = 1
 
   ami = "ami-05d2438ca66594916"
   instance_type = "${var.ec2_instance_spec}"
@@ -22,14 +22,20 @@ resource "aws_instance" "ec2_instance" {
     #!/bin/bash
     sudo apt update -y
     sudo apt upgrade -y
-                  # Git 설치
-              sudo apt install -y git
 
-    INSTANCE_NAME="${var.instance_name}'s server ${count.index}"
-    echo "<html><body><h1>$INSTANCE_NAME</h1></body></html>" | sudo tee /var/www/html/index.html
+    # Git 설치
+    sudo apt install -y git nodejs npm
 
-    sudo systemctl start apache2
-    sudo systemctl enable apache2
+    # Git 리포지토리에서 코드 복제
+    git clone https://github.com/junstory/24-2FullstackServiceProgramming.git
+    cd 24-2FullstackServiceProgramming/nodeServer
+    
+    #npm
+    npm i
+    sudo npm i pm2 -g
+    pm2 start ecosystem.config.cjs
+  
+    
   EOF
 }
 
