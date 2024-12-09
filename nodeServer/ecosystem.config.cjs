@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'my-app', // 애플리케이션 이름
       script: './src/index.js', // 실행할 파일 경로
-      instances: 1, // 클러스터 모드: CPU 코어 수만큼 실행
+      instances: 'max', // 클러스터 모드: CPU 코어 수만큼 실행
       exec_mode: 'cluster', // 클러스터 모드 사용
       watch: true, // 파일 변경 시 자동 재시작
       ignore_watch: ['node_modules', 'logs'], // 감시 제외 폴더
